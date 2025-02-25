@@ -1,7 +1,0 @@
-[package]
-name = "logviewer"
-version = "1.0.0"
-edition = "2021"
-
-[dependencies]
-crossterm = "0.25"

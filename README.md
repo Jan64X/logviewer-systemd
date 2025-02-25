@@ -2,6 +2,9 @@
 
 Logviewer-systemd is a command-line tool that filters and saves system logs based on specified criteria.
 
+This fork is a complete re-do, the original project used rust for basically just aliases which is completely unnecesary and also BLOAT.
+This fork aims to remedy that.
+
 ## If it does not show anything, run it as root
 
 ## Usage
@@ -18,31 +21,66 @@ Logviewer-systemd is a command-line tool that filters and saves system logs base
 
 ## Dependencies
 
-[Rust language](https://www.rust-lang.org/tools/install)
+[Bash](https://www.gnu.org/software/bash/)
+or
+[Zsh](https://zsh.sourceforge.io/)
 
 # Installation 
-## From source:
+## Add this to your .bashrc or .zshrc
 ```bash
-$ git clone https://github.com/tkmxqrdxddd/logviewer-systemd
-$ cd logviewer-systemd
-$ cargo install --path .
-```
-## Arch Linux 
+logviewer() {
+    local save_path=""
+    local keyword=""
+    local unit=""
+    local realtime=false
+    local cmd="journalctl"
 
-Use AUR Helper
-```bash
-$ paru -S logviewer-systemd
-$ yay -S logviewer-systemd
-```
-Or install manually
+    # Parse command-line arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --help)
+                $cmd --help
+                return 0
+                ;;
+            -s)
+                shift
+                save_path="$1"
+                ;;
+            -k)
+                shift
+                keyword="$1"
+                ;;
+            -u)
+                shift
+                unit="$1"
+                ;;
+            -r)
+                realtime=true
+                ;;
+            *)
+                echo "Unknown option: $1"
+                echo "Usage: logviewer [--help] [-s <path>] [-k <keyword>] [-u <unit>] [-r]"
+                return 1
+                ;;
+        esac
+        shift
+    done
 
-```bash
-$ git clone https://github.com/tkmxqrdxddd/logviewer-systemd
-$ cd logviewer-systemd
-$ makepkg -si
+    # Build the journalctl command
+    if [[ -n "$unit" ]]; then
+        cmd="$cmd -u $unit"
+    fi
+    if [[ "$realtime" == true ]]; then
+        cmd="$cmd -f"
+    fi
+    if [[ -n "$keyword" ]]; then
+        cmd="$cmd | grep -i \"$keyword\""
+    fi
+    if [[ -n "$save_path" ]]; then
+        eval "$cmd > \"$save_path\""
+    else
+        eval "$cmd"
+    fi
+}
 ```
-## Debian
-```bash
-wget https://github.com/tkmxqrdxddd/logviewer-systemd/releases/download/v1.0.0/logviewer_1.0.0_amd64.deb
-sudo dkpg -i logviewer_1.0.0_amd64.deb
 
